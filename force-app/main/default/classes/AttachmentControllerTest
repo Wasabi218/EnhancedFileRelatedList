@@ -1,0 +1,94 @@
+/**
+ * @description       : 
+ * @author            : Luca Strada, Antonia Lasaponara
+ * @group             : 
+ * @last modified on  : 04-10-2025
+ * @last modified by  : Antonia Lasaponara
+**/
+
+@isTest
+public class AttachmentControllerTest {
+    @testSetup
+    public static void setup() {
+        Account testAccount = new Account(Name='Test Account', Codice_cliente__c = 'ESF0001');
+        insert testAccount;        
+    }
+
+    
+    
+    
+    
+@isTest
+    public static void testGetAttachments() {
+        Account acc = [select id from Account];
+        ContentVersion cv = new ContentVersion();
+        cv.Title = 'Test File';
+        cv.PathOnClient = 'TestFile.txt';
+        cv.VersionData = Blob.valueOf('Test content');
+        cv.IsMajorVersion = true;
+        insert cv;
+
+        Id contentDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id].ContentDocumentId;
+
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = contentDocId;
+        cdl.LinkedEntityId = acc.Id;
+        cdl.ShareType = 'V'; 
+        cdl.Visibility = 'AllUsers';
+        insert cdl;
+
+        Test.startTest();
+        List<ContentDocument> attachments = AttachmentController.getAttachments(acc.Id);
+        Test.stopTest();
+
+        System.assertNotEquals(0, attachments.size(), 'Dovrebbe esserci almeno un allegato.');
+        System.assertEquals('Test File', attachments[0].Title, 'Il titolo dell\'allegato dovrebbe essere "Test File".');
+    }
+
+    @isTest
+    public static void testDeleteContentVersions() {
+        Account acc = [select id from Account];
+
+        ContentVersion cv = new ContentVersion();
+        cv.Title = 'Test File';
+        cv.PathOnClient = 'TestFile.txt';
+        cv.VersionData = Blob.valueOf('Test content');
+        cv.IsMajorVersion = true;
+        insert cv;
+
+        Id contentDocId = [SELECT ContentDocumentId FROM ContentVersion WHERE Id = :cv.Id].ContentDocumentId;
+
+        ContentDocumentLink cdl = new ContentDocumentLink();
+        cdl.ContentDocumentId = contentDocId;
+        cdl.LinkedEntityId = acc.Id;
+        cdl.ShareType = 'V'; 
+        cdl.Visibility = 'AllUsers';
+        insert cdl;
+
+        List<Id> contentVersionIds = new List<Id>{cv.Id};
+
+        Test.startTest();
+        AttachmentController.deleteContentVersions(contentVersionIds);
+        Test.stopTest();
+
+        List<ContentVersion> contentVersions = [SELECT Id FROM ContentVersion WHERE Id IN :contentVersionIds];
+        System.assertEquals(0, contentVersions.size(), 'Le versioni dei contenuti dovrebbero essere state eliminate.');
+    }
+
+    @isTest
+    public static void testUploadFile() {
+        Account acc = [select id from Account];
+
+        String fileName = 'TestFile.txt';
+        String base64Data = EncodingUtil.base64Encode(Blob.valueOf('Test content'));
+        String contentType = 'text/plain';
+
+        Test.startTest();
+        Id contentVersionId = AttachmentController.uploadFile(acc.Id, fileName, base64Data, contentType);
+        Test.stopTest();
+
+        ContentVersion cv = [SELECT Id, Title FROM ContentVersion WHERE Id = :contentVersionId];
+        System.assertNotEquals(null, cv, 'Il file dovrebbe essere stato caricato.');
+        System.assertEquals(fileName, cv.Title, 'Il titolo del file dovrebbe essere "TestFile.txt".');
+    }
+}

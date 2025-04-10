@@ -1,0 +1,135 @@
+<!--
+  @description       : 
+  @author            : antonia.lasaponara@lynxspa.com
+  @group             : 
+  @last modified on  : 04-10-2025
+  @last modified by  : antonia.lasaponara@lynxspa.com
+-->
+<template>
+    <article class="slds-card slds-card_boundary headerBottomBorder forceRelatedListCardDesktop">
+        <div class="slds-card__header slds-grid slds-page-header slds-m-bottom_small">
+            <!-- HEADER -->
+            <header class="slds-media slds-media_center slds-has-flexi-truncate">
+                <!-- ICON -->
+                <div class="slds-media__figure">
+                    <span class="slds-icon_container slds-icon-standard-file" title="file">
+                        <lightning-icon alternative-text='file' icon-name="standard:file" size="small"></lightning-icon>
+                    </span>
+                </div>
+                <!-- TITLE -->
+                <div class="slds-media__body">
+                    <h2 class="slds-card__header-title">
+                        <a href={viewAllUrl} class="slds-card__header-link slds-truncate" title={title}>
+                            <span>{title}</span>
+                        </a>
+                    </h2>
+                </div>
+                <!-- ACTIONS -->
+                <div class="slds-no-flex">
+                    <lightning-button-group>
+                        <lightning-button label="Add Files" onclick={handleUploadClick}></lightning-button>
+                        <lightning-button label={selectAllLabel} onclick={toggleSelectAll} disabled={isAttachmentsEmpty}></lightning-button>
+                        <lightning-button label="Download" onclick={handleDownloadSelected} disabled={isNoSelection}></lightning-button>
+                        <lightning-button label="Delete" onclick={handleDeleteSelected} disabled={isNoSelection}></lightning-button>
+                    </lightning-button-group>
+                    <!-- <input type="file" id="fileInput" style="display: none;" multiple onchange={handleFilesChange} /> -->
+                </div>
+            </header>
+        </div>
+
+        <template if:true={isModalOpen}>
+            <section role="dialog" tabindex="-1" aria-labelledby="modal-heading-01" aria-modal="true" aria-describedby="modal-content-id-1" class="slds-modal slds-fade-in-open">
+                <div class="slds-modal__container">
+                    <header class="slds-modal__header">
+                        <button class="slds-button slds-button_icon slds-modal__close slds-button_icon-inverse" title="Close" onclick={closeModal}>
+                            <lightning-icon icon-name="utility:close" alternative-text="close" variant="inverse" size="small"></lightning-icon>
+                            <span class="slds-assistive-text">Close</span>
+                        </button>
+                        <h2 id="modal-heading-01" class="slds-modal__title slds-hyphenate">Upload Files</h2>
+                    </header>
+                    <div class="slds-modal__content slds-p-around_medium" id="modal-content-id-1">
+                        <div class="slds-align_absolute-center slds-p-around_medium">
+                            <lightning-file-upload
+                                name="fileUploader"
+                                record-id={recordId}
+                                onuploadfinished={handleUploadFinished2}
+                                multiple
+                            ></lightning-file-upload>
+                        </div>
+                    </div>
+                    <footer class="slds-modal__footer">
+                        <button class="slds-button slds-button_neutral" onclick={closeModal}>Cancel</button>
+                    </footer>
+                </div>
+            </section>
+            <div class="slds-backdrop slds-backdrop_open"></div>
+        </template>
+
+        <div class="slds-card__body slds-card__body_inner">
+
+            <!-- BODY WITHOUT FILES -->
+            <template if:true={isVisible}>
+                <div class="slds-text-align_center slds-m-bottom_small">
+                    <lightning-file-upload
+                        name="fileUploader"
+                        record-id={recordId}
+                        onuploadfinished={handleUploadFinished}
+                        multiple
+                    ></lightning-file-upload>
+                </div>
+            </template>
+
+            <!-- BODY WITH FILES -->
+            <template if:false={isAttachmentsEmpty}>
+                <div class="slds-scrollable_y slds-grid slds-wrap" style="max-height:300px;">
+                    <template for:each={attachments} for:item="file">
+                        <div key={file.Id} class="slds-col slds-size_1-of-1 slds-medium-size_1-of-2 slds-p-around_x-small">
+                            <div class="slds-grid slds-align-top">
+                                <!-- Checkbox -->
+                                <lightning-input type="checkbox"
+                                    data-id={file.LatestPublishedVersionId}
+                                    class="file-checkbox slds-m-right_small"
+                                    onchange={handleCheckboxChange}>
+                                </lightning-input>
+                                <!-- Thumbnail (30x35) -->
+                                <div class="slds-m-right_small">
+                                    <a onclick={handlePreview} data-id={file.Id}>
+                                        <template if:true={file.thumbnailUrl}>
+                                            <img src={file.thumbnailUrl} alt={file.Title}
+                                                 class="slds-image" 
+                                                 style="width:30px; height:35px;" />
+                                        </template>
+                                        <template if:false={file.thumbnailUrl}>
+                                            <lightning-icon icon-name={file.iconName} alternative-text="file" ></lightning-icon> <!-- size="small" -->
+                                        </template>
+                                    </a>
+                                </div>
+            
+                                <!-- File info -->
+                                <div class="slds-truncate">
+                                    <p>
+                                        <a onclick={handlePreview} data-id={file.Id}>
+                                            {file.Title}
+                                        </a>
+                                    </p>
+                                    <p class="slds-text-body_small">
+                                        {file.CreatedDate} • {file.Size} KB • {file.Extension}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+                </div>
+            </template>
+        </div>
+        <!-- VIEW ALL -->
+        <template if:true={showViewAll}>
+        <a href={viewAllUrl}>
+            <div class="slds-card__footer">
+                <span class="view-all-label">View All<span class="assistiveText">Files</span>
+                </span>
+            </div>
+        </a>
+        </template>
+    </article>
+</template>

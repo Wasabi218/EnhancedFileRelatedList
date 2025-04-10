@@ -1,0 +1,99 @@
+/**
+ * @description       : 
+ * @author            : Luca Strada, Antonia Lasaponara
+ * @group             : 
+ * @last modified on  : 04-10-2025
+ * @last modified by  : Antonia Lasaponara
+**/
+public with sharing class AttachmentController {
+    @AuraEnabled(cacheable=true)
+    public static List<ContentDocument> getAttachments(Id recordId) {
+        
+        List<ContentDocumentLink> links = [
+            SELECT ContentDocumentId 
+            FROM ContentDocumentLink 
+            WHERE LinkedEntityId = :recordId
+        ];
+
+        if (links.isEmpty()) {
+            return new List<ContentDocument>();
+        }
+
+        Set<Id> contentDocumentIds = new Set<Id>();
+
+        for (ContentDocumentLink link : links) {
+            contentDocumentIds.add(link.ContentDocumentId);
+        }
+
+        return [
+            SELECT Id, Title, FileExtension, LatestPublishedVersionId, ContentSize, FileType, 
+                   CreatedDate, CreatedBy.Name, LastModifiedDate, LastModifiedBy.Name 
+            FROM ContentDocument 
+            WHERE Id IN :contentDocumentIds 
+            ORDER BY CreatedDate DESC
+        ];
+    }
+
+    @AuraEnabled
+    public static void deleteContentVersions(List<Id> contentVersionIds) {
+
+        if (contentVersionIds.isEmpty()) {
+            return;
+        }
+
+        try {
+            List<ContentVersion> contentVersions = [
+                SELECT ContentDocumentId 
+                FROM ContentVersion 
+                WHERE Id IN :contentVersionIds
+            ];
+
+            Set<Id> contentDocumentIds = new Set<Id>();
+            for (ContentVersion cv : contentVersions) {
+                contentDocumentIds.add(cv.ContentDocumentId);
+            }
+
+            delete [
+                SELECT Id 
+                FROM ContentDocument 
+                WHERE Id IN :contentDocumentIds
+            ];
+        } catch (Exception e) {
+            System.debug('Errore durante l\'eliminazione dei documenti: ' + e.getMessage());
+            throw new AuraHandledException('Errore durante l\'eliminazione dei documenti.');
+        }
+    }
+
+    @AuraEnabled
+    public static Id uploadFile(String recordId, String fileName, String base64Data, String contentType) {
+        try {
+            base64Data = EncodingUtil.urlDecode(base64Data, 'UTF-8');
+
+            ContentVersion cv = new ContentVersion();
+            cv.Title = fileName;
+            cv.PathOnClient = fileName;
+            cv.VersionData = EncodingUtil.base64Decode(base64Data);
+            cv.IsMajorVersion = true;
+            
+            insert cv;
+            
+            Id contentDocId = [
+                SELECT ContentDocumentId 
+                FROM ContentVersion 
+                WHERE Id = :cv.Id
+            ].ContentDocumentId;
+            
+            ContentDocumentLink cdl = new ContentDocumentLink();
+            cdl.ContentDocumentId = contentDocId;
+            cdl.LinkedEntityId = recordId;
+            cdl.ShareType = 'V'; 
+            cdl.Visibility = 'AllUsers';
+            
+            insert cdl;
+            
+            return cv.Id;
+        } catch (Exception e) {
+            throw new AuraHandledException('Errore nel caricamento del file: ' + e.getMessage());
+        }
+    }
+}
