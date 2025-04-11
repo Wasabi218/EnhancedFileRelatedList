@@ -13,6 +13,7 @@ import uploadFile from '@salesforce/apex/AttachmentController.uploadFile';
 
 export default class MassDownloadAttachments extends NavigationMixin(LightningElement) {
     @api recordId;
+    @api objectApiName;
     @track attachments = [];
     @track selectedFileIds = new Set();
     @track isLoading = false;
@@ -51,6 +52,21 @@ export default class MassDownloadAttachments extends NavigationMixin(LightningEl
 
     closeModal() {
         this.isModalOpen = false;
+    }
+
+    navigateToFiles() {
+        
+        if(!this.objectApiName || !this.recordId) return;
+
+        this[NavigationMixin.Navigate]({
+            type: 'standard__recordRelationshipPage',
+            attributes: {
+                recordId: this.recordId,
+                objectApiName: this.objectApiName,
+                relationshipApiName: 'AttachedContentDocuments',
+                actionName: 'view'
+            }
+        });
     }
     
     handleUploadFinished2(event) {
