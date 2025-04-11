@@ -1,9 +1,9 @@
 <!--
   @description       : 
-  @author            : antonia.lasaponara@lynxspa.com
+  @author            : Luca strada, Antonia Lasaponara
   @group             : 
-  @last modified on  : 04-10-2025
-  @last modified by  : antonia.lasaponara@lynxspa.com
+  @last modified on  : 04-11-2025
+  @last modified by  : Luca Strada
 -->
 <template>
     <article class="slds-card slds-card_boundary headerBottomBorder forceRelatedListCardDesktop">
@@ -19,9 +19,9 @@
                 <!-- TITLE -->
                 <div class="slds-media__body">
                     <h2 class="slds-card__header-title">
-                        <a href={viewAllUrl} class="slds-card__header-link slds-truncate" title={title}>
+                        <span class="slds-card__header-link slds-truncate slds-text-link" title={title} onclick={navigateToFiles} style="cursor: pointer;">
                             <span>{title}</span>
-                        </a>
+                        </span>
                     </h2>
                 </div>
                 <!-- ACTIONS -->
@@ -124,12 +124,11 @@
         </div>
         <!-- VIEW ALL -->
         <template if:true={showViewAll}>
-        <a href={viewAllUrl}>
             <div class="slds-card__footer">
-                <span class="view-all-label">View All<span class="assistiveText">Files</span>
+                <span class="slds-text-link" onclick={navigateToFiles} style="cursor: pointer;">
+                    View All<span class="assistiveText">Files</span>
                 </span>
             </div>
-        </a>
         </template>
     </article>
 </template>
