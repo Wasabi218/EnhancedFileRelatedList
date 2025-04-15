@@ -5,11 +5,7 @@ import { refreshApex } from "@salesforce/apex";
 import getAttachments from '@salesforce/apex/AttachmentController.getAttachments';
 import deleteContentVersions from '@salesforce/apex/AttachmentController.deleteContentVersions';
 import uploadFile from '@salesforce/apex/AttachmentController.uploadFile';
-/**
- *  1. upload file s direttamente dal pulsante
- *  2. icone file se non c'è la tumbnail
- *  3. trackare la delete standard e refreshare la lista di file
- */
+
 
 export default class MassDownloadAttachments extends NavigationMixin(LightningElement) {
     @api recordId;
@@ -282,7 +278,7 @@ export default class MassDownloadAttachments extends NavigationMixin(LightningEl
             this.showToast('Successo', 'File eliminati con successo.', 'success');
         } catch (error) {
             console.error('Errore durante l\'eliminazione:', JSON.stringify(error));
-            this.showToast('Errore', 'Si è verificato un errore durante l\'eliminazione dei file.', 'error');
+            this.showToast('Errore', error.body.message, 'error');
         } finally {
             this.selectedFileIds.clear();
             this.allSelected = false;
