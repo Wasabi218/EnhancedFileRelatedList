@@ -6,7 +6,7 @@
 		<name>ApexClass</name>
 	</types>
 	<types>
-		<members>massDownloadAttachments</members>
+		<members>EnhancedFileRelatedList</members>
 		<name>LightningComponentBundle</name>
 	</types>
 	<version>63.0</version>
